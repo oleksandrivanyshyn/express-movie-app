@@ -9,7 +9,47 @@ var indexRouter = require('./routes/index');
 var app = express();
 
 const helmet = require('helmet');
-app.use(helmet());
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+
+                "script-src": [
+                    "'self'",
+                    "https://ajax.googleapis.com",
+                    "https://maxcdn.bootstrapcdn.com"
+                ],
+
+                "style-src": [
+                    "'self'",
+                    "'unsafe-inline'",
+                    "https://maxcdn.bootstrapcdn.com",
+                    "https://fonts.googleapis.com"
+                ],
+
+                "font-src": [
+                    "'self'",
+                    "https://fonts.gstatic.com"
+                ],
+
+                "connect-src": [
+                    "'self'",
+                    "https://maxcdn.bootstrapcdn.com"
+                ],
+
+                "img-src": [
+                    "'self'",
+                    "data:",
+                    "http://image.tmdb.org",
+                    "https://image.tmdb.org"
+                ],
+            },
+        },
+        crossOriginEmbedderPolicy: false,
+        crossOriginResourcePolicy: false,
+    })
+);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
