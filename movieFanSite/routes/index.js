@@ -19,5 +19,12 @@ router.get('/', async function(req, res, next) {
     res.render('index', { parsedData: parsedData.results });
   })
 });
-
+router.get('/movie/:id', (req, res, next) => {
+  const movieId = req.params.id;
+  const thisMovieUrl = `${apiBaseUrl}/movie/${movieId}?api_key=${apiKey}`;
+  request(thisMovieUrl, (err, response, movieData) => {
+    const parsedData = JSON.parse(movieData);
+    res.render('single-movie', { parsedData });
+  })
+});
 module.exports = router;
