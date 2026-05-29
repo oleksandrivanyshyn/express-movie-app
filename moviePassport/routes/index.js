@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
+const passport = require('passport');
 const request = require('request');
 const apiKey = '1fb720b97cc13e580c2c35e1138f90f8';
 const apiBaseUrl = "https://api.themoviedb.org/3";
@@ -15,13 +16,26 @@ router.use((req, res, next) => {
 
 /* GET home page. */
 router.get('/', async function(req, res, next) {
+  console.log(req.user);
   request.get(nowPlayingUrl, (err, response, movieData) => {
     const parsedData = JSON.parse(movieData);
     res.render('index', { parsedData: parsedData.results });
   })
 });
 
-router.get('/login', (req, res, next) => {})
+router.get('/login', passport.authenticate('github'));
+
+router.get(
+    '/auth',
+    passport.authenticate("github", { failureRedirect: '/login' }),
+    function (req, res) {
+      res.redirect("/");
+    },
+);
+
+router.get('/favorites', (req, res, next) => {
+  res.json(req.user.displayName);
+})
 
 router.get('/movie/:id', (req, res, next) => {
   const movieId = req.params.id;

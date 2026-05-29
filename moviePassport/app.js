@@ -1,81 +1,78 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+require("dotenv").config();
+var createError = require("http-errors");
+var express = require("express");
+var path = require("path");
+var cookieParser = require("cookie-parser");
+var logger = require("morgan");
+const session = require("express-session");
+const passport = require("passport");
+const GitHubStrategy = require("passport-github").Strategy;
 
-var indexRouter = require('./routes/index');
+var indexRouter = require("./routes/index");
 
 var app = express();
-
-const helmet = require('helmet');
+const helmet = require("helmet");
 app.use(
     helmet({
-        contentSecurityPolicy: {
-            directives: {
-                ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-
-                "script-src": [
-                    "'self'",
-                    "https://ajax.googleapis.com",
-                    "https://maxcdn.bootstrapcdn.com"
-                ],
-
-                "style-src": [
-                    "'self'",
-                    "'unsafe-inline'",
-                    "https://maxcdn.bootstrapcdn.com",
-                    "https://fonts.googleapis.com"
-                ],
-
-                "font-src": [
-                    "'self'",
-                    "https://fonts.gstatic.com"
-                ],
-
-                "connect-src": [
-                    "'self'",
-                    "https://maxcdn.bootstrapcdn.com"
-                ],
-
-                "img-src": [
-                    "'self'",
-                    "data:",
-                    "http://image.tmdb.org",
-                    "https://image.tmdb.org"
-                ],
-            },
-        },
-        crossOriginEmbedderPolicy: false,
-        crossOriginResourcePolicy: false,
-    })
+        contentSecurityPolicy: false,
+    }),
 );
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+app.use(
+    session({
+        secret: "I love Express!",
+        resave: false,
+        saveUninitialized: true,
+    }),
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
-app.use(logger('dev'));
+passport.use(
+    new GitHubStrategy(
+        {
+            clientID: process.env.CLIENT_ID,
+            clientSecret: process.env.CLIENT_SECRET,
+            callbackURL: "http://localhost:3000/auth",
+        },
+        function (accessToken, refreshToken, profile, cb) {
+            return cb(null, profile);
+        },
+    ),
+);
+passport.serializeUser((user, cb) => {
+    cb(null, user);
+});
+passport.deserializeUser((user, cb) => {
+    cb(null, user);
+});
+
+// view engine setup
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "ejs");
+
+app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use('/', indexRouter);
+app.use("/", indexRouter);
+
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+app.use(function (req, res, next) {
+    next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.use(function (err, req, res, next) {
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get("env") === "development" ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+    // render the error page
+    res.status(err.status || 500);
+    res.render("error");
 });
 
 module.exports = app;
