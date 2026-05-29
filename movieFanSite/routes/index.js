@@ -23,9 +23,24 @@ router.get('/movie/:id', (req, res, next) => {
   const movieId = req.params.id;
   const thisMovieUrl = `${apiBaseUrl}/movie/${movieId}?api_key=${apiKey}`;
   request(thisMovieUrl, (err, response, movieData) => {
-    const parsedData = JSON.parse(movieData);
-    res.render('single-movie', { parsedData });
-  })
+    if (err) {
+      console.error("API Request Error:", err);
+      return res.status(500).send("Failed to fetch data from the API.");
+    }
+
+    if (!movieData || movieData.trim() === "") {
+      console.warn(`Empty response body received. HTTP Status: ${response && response.statusCode}`);
+      return res.status(500).send("API returned an empty response. Try a hard refresh (Ctrl+F5).");
+    }
+
+    try {
+      const parsedData = JSON.parse(movieData);
+      res.render('single-movie', { parsedData });
+    } catch (parseError) {
+      console.error("JSON Parse Error. Raw Data:", movieData);
+      res.status(500).send("Invalid data format received from the API.");
+    }
+  });
 });
 router.post('/search', (req, res, next) => {
   const userSearchTerm = encodeURI(req.body.movieSearch);
